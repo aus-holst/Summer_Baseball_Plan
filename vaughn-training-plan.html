@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Vaughn's Plan">
+  <meta name="theme-color" content="#1A237E">
+  <title>Vaughn's Training Plan</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; min-height: 100%; background: #FAFAFA; }
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-text-size-adjust: 100%;
+    }
+    button { font-family: inherit; cursor: pointer; border: none; }
+    button:active { opacity: 0.75; }
+  </style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ============================================================
+// UTILITIES
+// ============================================================
+function esc(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+// ============================================================
+// CONSTANTS
+// ============================================================
+const STORAGE_KEY = 'vaughn-summer-2026';
+
+const CAT = {
+  warmup:   { bg: '#FFF3E0', border: '#FF9800', text: '#E65100',  icon: '🔥' },
+  pitching: { bg: '#E3F2FD', border: '#2196F3', text: '#0D47A1',  icon: '⚾' },
+  hitting:  { bg: '#F3E5F5', border: '#9C27B0', text: '#4A148C',  icon: '🏏' },
+  strength: { bg: '#E8F5E9', border: '#4CAF50', text: '#1B5E20',  icon: '💪' },
+  cooldown: { bg: '#E0F7FA', border: '#00BCD4', text: '#006064',  icon: '🧊' },
+};
+
+const PC = {
+  1: { accent: '#FF9800', tag: '#FFF3E0', tagText: '#E65100' },
+  2: { accent: '#2196F3', tag: '#E3F2FD', tagText: '#0D47A1' },
+  3: { accent: '#4CAF50', tag: '#E8F5E9', tagText: '#1B5E20' },
+};
+
+// ============================================================
+// PLAN DATA
+// ============================================================
+function buildPlan() {
+  const ex = (name, detail, mins, cat) => ({ name, detail, mins, category: cat });
+  const weeks = [];
+
+  // --- PHASE 1: FOUNDATION (Weeks 1-3) ---
+  const p1Warmup = [
+    ex('Light Jog', '2 laps around gym or 90sec jog in place', 2, 'warmup'),
+    ex('Arm Circles', '20 forward, 20 backward \u2014 small to big', 1, 'warmup'),
+    ex('Band Pull-Aparts', '15 reps, light band, chest height', 2, 'warmup'),
+    ex('Hip Circles', '10 each direction, hands on hips', 1, 'warmup'),
+    ex('Wrist Rolls & Forearm Stretch', '30 sec each direction, then stretch each wrist 15 sec', 2, 'warmup'),
+  ];
+  const p1StrengthA = [
+    ex('Push-Ups', '2\u00d78 \u2014 chest to floor, full plank. Knees down if needed.', 4, 'strength'),
+    ex('Goblet Squat', '2\u00d710 \u2014 bodyweight only, sit back like a chair, chest up', 4, 'strength'),
+    ex('Dead Bugs', '2\u00d78 each side \u2014 low back glued to floor', 3, 'strength'),
+    ex('Plank Hold', '2\u00d720 sec \u2014 straight line head to heels, squeeze everything', 2, 'strength'),
+  ];
+  const p1StrengthB = [
+    ex('Light Band Rows', '2\u00d710 \u2014 squeeze shoulder blades, elbows tight', 4, 'strength'),
+    ex('Bodyweight Lunges', '2\u00d78 each leg \u2014 front knee behind toes', 4, 'strength'),
+    ex('Bear Crawls', '2\u00d720 feet down and back \u2014 slow and controlled', 3, 'strength'),
+    ex('Side Plank', '2\u00d715 sec each side \u2014 hip up, straight line', 2, 'strength'),
+  ];
+  const p1Cooldown = [
+    ex('Shoulder Stretch', 'Cross-body hold 20 sec each arm', 1, 'cooldown'),
+    ex('Sleeper Stretch', 'Lying on throwing side, 20 sec gentle press', 1, 'cooldown'),
+    ex('Hip Flexor Stretch', 'Half-kneel, 20 sec each side', 1, 'cooldown'),
+    ex('Forearm Stretch', 'Arm extended, pull fingers back 15 sec each', 1, 'cooldown'),
+  ];
+  const p1Pitch = (s) => [
+    ...p1Warmup,
+    ex('Short-Distance Accuracy', '25 throws from 30-35 ft at a target. Focus: balance point, lead with hips, consistent release. 60-70% effort.', 18, 'pitching'),
+    ex('Target Challenge', '10 throws \u2014 aim for specific quadrants. Track hits.', 7, 'pitching'),
+    ...s, ...p1Cooldown,
+  ];
+  const p1Hit = (s) => [
+    ...p1Warmup,
+    ex('Tee Work', '15 swings \u2014 focus on weight transfer back-to-front, level swing path', 8, 'hitting'),
+    ex('Cage Reps \u2014 Slow Speed', '20 swings \u2014 medium speed machine, contact quality over power', 12, 'hitting'),
+    ex('Two-Strike Drill', '10 swings \u2014 choke up, shorten swing, put ball in play', 5, 'hitting'),
+    ...s, ...p1Cooldown,
+  ];
+  for (let w = 1; w <= 3; w++) {
+    weeks.push({
+      week: w, phase: 'Foundation', phaseNum: 1,
+      objective: w === 1 ? 'Learn the routine. Establish warm-up habits and baseline form.'
+        : w === 2 ? 'Refine pitching mechanics. Build consistency in swing contact point.'
+        : 'Solidify movement patterns. Should feel automatic entering Phase 2.',
+      days: [
+        { day: 'Day 1', label: 'Pitch + Push/Core',   exercises: p1Pitch(p1StrengthA) },
+        { day: 'Day 2', label: 'Hit + Pull/Legs',     exercises: p1Hit(p1StrengthB)   },
+        { day: 'Day 3', label: 'Pitch + Pull/Legs',   exercises: p1Pitch(p1StrengthB) },
+        { day: 'Day 4', label: 'Hit + Push/Core',     exercises: p1Hit(p1StrengthA)   },
+      ],
+    });
+  }
+
+  // --- PHASE 2: BUILD (Weeks 4-7) ---
+  const p2Warmup = [
+    ex('Jog + High Knees', '90 sec jog, then 20 high knees', 2, 'warmup'),
+    ex('Band Pull-Aparts', '15 reps light band', 1, 'warmup'),
+    ex('Band External Rotation', '10 each arm \u2014 elbow at 90\u00b0, rotate out', 2, 'warmup'),
+    ex('Hip Hinges', '10 reps \u2014 push hips back, flat back, feel hamstrings', 1, 'warmup'),
+    ex('Arm Care Circuit', '10 band internal rotations each arm + wrist rolls', 2, 'warmup'),
+  ];
+  const p2StrengthA = [
+    ex('Push-Ups', '2\u00d712 \u2014 full range, slow down fast up', 4, 'strength'),
+    ex('Goblet Squat', '2\u00d710 \u2014 5-10 lb dumbbell at chest', 4, 'strength'),
+    ex('Med Ball Rotation Throw', '2\u00d76 each side \u2014 2-4 lb ball, hip-driven rotation against wall', 4, 'strength'),
+    ex('Dead Bugs', '2\u00d710 each side \u2014 slow and controlled', 3, 'strength'),
+  ];
+  const p2StrengthB = [
+    ex('Dumbbell Rows', '2\u00d710 each arm \u2014 5-8 lb, squeeze shoulder blade at top', 4, 'strength'),
+    ex('Lateral Lunges', '2\u00d78 each leg \u2014 push hips back, stay low', 4, 'strength'),
+    ex("Farmer's Carries", '2\u00d740 ft \u2014 10 lb each hand, tall posture, tight core', 3, 'strength'),
+    ex('Plank Shoulder Taps', "2\u00d78 each side \u2014 slow, don't let hips rock", 3, 'strength'),
+  ];
+  const p2Cooldown = [
+    ex('Shoulder Stretch', 'Cross-body 20 sec each arm', 1, 'cooldown'),
+    ex('Sleeper Stretch', '20 sec throwing arm', 1, 'cooldown'),
+    ex('Quad Stretch', 'Standing, 20 sec each leg', 1, 'cooldown'),
+    ex('Deep Breathing', '5 slow breaths \u2014 in through nose, out through mouth', 1, 'cooldown'),
+  ];
+  const p2Pitch = (s) => [
+    ...p2Warmup,
+    ex('Long Toss', '8-10 throws \u2014 start at 40 ft, work back to 60 ft. Build arm strength. Easy effort.', 5, 'pitching'),
+    ex('Mound Work \u2014 Full Distance', '30 throws from 46 ft. Work fastball to spots: glove side, arm side, up, down.', 15, 'pitching'),
+    ex('Pitch Sequencing', '10 throws \u2014 alternate locations. Call the spot before each pitch.', 5, 'pitching'),
+    ...s, ...p2Cooldown,
+  ];
+  const p2Hit = (s) => [
+    ...p2Warmup,
+    ex('Soft Toss / Tee \u2014 Drive Drill', '15 swings \u2014 focus on driving through the ball, extension after contact', 7, 'hitting'),
+    ex('Cage Reps \u2014 Medium Speed', '20 swings \u2014 slightly faster machine, focus on timing and barrel accuracy', 10, 'hitting'),
+    ex('Zone Hitting', '10 swings \u2014 call inside or outside, adjust approach each pitch', 5, 'hitting'),
+    ex('Power Swings', '5 swings off tee \u2014 max effort with good mechanics. Feel the difference.', 3, 'hitting'),
+    ...s, ...p2Cooldown,
+  ];
+  for (let w = 4; w <= 7; w++) {
+    weeks.push({
+      week: w, phase: 'Build', phaseNum: 2,
+      objective: w === 4 ? 'Introduce light dumbbells and med ball work. Extend pitching to full distance.'
+        : w === 5 ? 'Build consistency at 46 ft. Increase cage speed. Strength reps climbing.'
+        : w === 6 ? 'Pitch sequencing becomes intentional. Rotational power developing.'
+        : 'Peak training volume. Arm should feel strong. Hitting with more authority.',
+      days: [
+        { day: 'Day 1', label: 'Pitch + Push/Rotation', exercises: p2Pitch(p2StrengthA) },
+        { day: 'Day 2', label: 'Hit + Pull/Carry',      exercises: p2Hit(p2StrengthB)   },
+        { day: 'Day 3', label: 'Pitch + Pull/Carry',    exercises: p2Pitch(p2StrengthB) },
+        { day: 'Day 4', label: 'Hit + Push/Rotation',   exercises: p2Hit(p2StrengthA)   },
+      ],
+    });
+  }
+
+  // --- PHASE 3: PERFORM (Weeks 8-10) ---
+  const p3Warmup = [
+    ex('Dynamic Warm-Up', 'Jog, high knees, karaoke, arm circles \u2014 game-day routine', 3, 'warmup'),
+    ex('Band Arm Care', 'Pull-aparts, external rotations, 10 each', 2, 'warmup'),
+    ex('Med Ball Slams', '8 reps \u2014 overhead slam, 2-4 lb ball, wake up the body', 2, 'warmup'),
+    ex('Hip Openers', 'Spiderman lunge with reach, 5 each side', 1, 'warmup'),
+  ];
+  const p3StrengthA = [
+    ex('Push-Ups', '3\u00d710 \u2014 slow negative (3 sec down)', 4, 'strength'),
+    ex('Goblet Squat', '3\u00d710 \u2014 10 lb dumbbell', 4, 'strength'),
+    ex('Med Ball Rotation Throw', '3\u00d76 each side \u2014 4-6 lb ball if ready, max intent', 4, 'strength'),
+    ex('Plank Hold', '2\u00d730 sec \u2014 squeeze glutes and abs hard', 2, 'strength'),
+  ];
+  const p3StrengthB = [
+    ex('Dumbbell Rows', '3\u00d710 each arm \u2014 8-10 lb', 4, 'strength'),
+    ex('Split Squats', '2\u00d78 each leg \u2014 rear foot elevated on bench if able', 4, 'strength'),
+    ex("Farmer's Carries", '3\u00d740 ft \u2014 10-15 lb each hand', 3, 'strength'),
+    ex('Dead Bugs', '2\u00d712 each side', 3, 'strength'),
+  ];
+  const p3Cooldown = [
+    ex('Full Shoulder Stretch Routine', 'Cross-body, sleeper, doorway stretch \u2014 20 sec each', 2, 'cooldown'),
+    ex('Hip & Hamstring Stretch', 'Seated straddle reach, 30 sec', 1, 'cooldown'),
+    ex('Deep Breathing', '5 slow breaths. Reflect on what went well today.', 1, 'cooldown'),
+  ];
+  const p3Pitch = (s) => [
+    ...p3Warmup,
+    ex('Long Toss', '8 throws \u2014 build to 70 ft if comfortable', 4, 'pitching'),
+    ex('Game Simulation', '30-35 pitches from mound. Call situations: runner on 2nd, 2-1 count, etc. Pick pitch and location before each throw.', 16, 'pitching'),
+    ex('Pressure Pitches', "5 throws \u2014 'full count, bases loaded' mentality. Best stuff.", 4, 'pitching'),
+    ...s, ...p3Cooldown,
+  ];
+  const p3Hit = (s) => [
+    ...p3Warmup,
+    ex('Cage Reps \u2014 Game Speed', '15 swings at fastest speed with good mechanics', 8, 'hitting'),
+    ex('Reaction Drill', "10 swings \u2014 someone calls 'inside' or 'outside' as pitch comes. Adjust.", 6, 'hitting'),
+    ex('Tee Power Rounds', '8 swings \u2014 max intent, drive ball, full extension', 4, 'hitting'),
+    ex('Fun Round', '10 swings \u2014 his choice of speed, just compete and enjoy it', 4, 'hitting'),
+    ...s, ...p3Cooldown,
+  ];
+  for (let w = 8; w <= 10; w++) {
+    weeks.push({
+      week: w, phase: 'Perform', phaseNum: 3,
+      objective: w === 8 ? 'Game simulation begins. Translate training into competitive reps.'
+        : w === 9 ? 'Peak confidence week. Everything clicking \u2014 arm, bat, body.'
+        : 'Finish strong. Light final 2 sessions. Walk away hungry for fall ball.',
+      days: [
+        { day: 'Day 1', label: 'Pitch + Push/Rotation', exercises: p3Pitch(p3StrengthA) },
+        { day: 'Day 2', label: 'Hit + Pull/Carry',      exercises: p3Hit(p3StrengthB)   },
+        { day: 'Day 3', label: 'Pitch + Pull/Carry',    exercises: p3Pitch(p3StrengthB) },
+        { day: 'Day 4', label: 'Hit + Push/Rotation',   exercises: p3Hit(p3StrengthA)   },
+      ],
+    });
+  }
+
+  return weeks;
+}
+
+const PLAN = buildPlan();
+
+// ============================================================
+// STATE
+// ============================================================
+const S = {
+  completed: {},
+  activeWeek: 0,
+  activeDay: 0,
+  view: 'overview', // overview | week | day
+};
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) S.completed = JSON.parse(raw);
+  } catch (e) {}
+}
+
+function persist() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(S.completed)); } catch (e) {}
+}
+
+// ============================================================
+// PROGRESS
+// ============================================================
+function dayProg(wi, di) {
+  const exs = PLAN[wi].days[di].exercises;
+  let done = 0;
+  exs.forEach((_, i) => { if (S.completed[`${wi}-${di}-${i}`]) done++; });
+  const total = exs.length;
+  return { done, total, pct: total ? Math.round((done / total) * 100) : 0 };
+}
+
+function weekProg(wi) {
+  let done = 0, total = 0;
+  PLAN[wi].days.forEach((_, di) => {
+    const p = dayProg(wi, di);
+    done += p.done; total += p.total;
+  });
+  return { done, total, pct: total ? Math.round((done / total) * 100) : 0 };
+}
+
+function totalProg() {
+  let done = 0, total = 0;
+  PLAN.forEach((_, wi) => {
+    const p = weekProg(wi);
+    done += p.done; total += p.total;
+  });
+  return { done, total, pct: total ? Math.round((done / total) * 100) : 0 };
+}
+
+// ============================================================
+// ACTIONS (called from onclick attributes)
+// ============================================================
+function goOverview() { S.view = 'overview'; render(); scrollTo(0,0); }
+function goWeek(wi) { S.activeWeek = wi; S.view = 'week'; render(); scrollTo(0,0); }
+function goDay(wi, di) { S.activeWeek = wi; S.activeDay = di; S.view = 'day'; render(); scrollTo(0,0); }
+function toggleEx(wi, di, ei) {
+  const k = `${wi}-${di}-${ei}`;
+  if (S.completed[k]) delete S.completed[k];
+  else S.completed[k] = true;
+  persist();
+  render();
+}
+
+// ============================================================
+// RENDER HELPERS
+// ============================================================
+function bar(pct, color, h, light) {
+  const track = light ? 'rgba(255,255,255,0.25)' : '#F0F0F0';
+  return `<div style="background:${track};border-radius:100px;height:${h}px;margin-top:8px;">
+    <div style="width:${pct}%;background:${light ? '#fff' : color};height:${h}px;border-radius:100px;transition:width .3s;"></div>
+  </div>`;
+}
+
+// ============================================================
+// DAY VIEW
+// ============================================================
+function renderDay() {
+  const wi = S.activeWeek, di = S.activeDay;
+  const week = PLAN[wi], day = week.days[di];
+  const prog = dayProg(wi, di);
+  const pc = PC[week.phaseNum];
+
+  let exHtml = '';
+  let prevCat = null;
+  day.exercises.forEach((ex, i) => {
+    const done = !!S.completed[`${wi}-${di}-${i}`];
+    const cat = CAT[ex.category];
+    if (ex.category !== prevCat) {
+      prevCat = ex.category;
+      exHtml += `
+        <div style="display:flex;align-items:center;gap:6px;margin-top:${i > 0 ? 16 : 8}px;margin-bottom:6px;padding-left:4px;">
+          <span style="font-size:14px;">${cat.icon}</span>
+          <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:${cat.text};">${ex.category}</span>
+        </div>`;
+    }
+    exHtml += `
+      <button onclick="toggleEx(${wi},${di},${i})"
+        style="display:flex;width:100%;text-align:left;gap:10px;align-items:flex-start;
+               background:${done ? '#F5F5F5' : '#fff'};
+               border:1.5px solid ${done ? '#E0E0E0' : cat.border};
+               border-radius:10px;padding:10px 12px;margin-bottom:6px;
+               opacity:${done ? 0.6 : 1};">
+        <div style="width:22px;height:22px;border-radius:6px;flex-shrink:0;margin-top:1px;
+                    border:2px solid ${done ? '#4CAF50' : '#CCC'};
+                    background:${done ? '#4CAF50' : 'transparent'};
+                    display:flex;align-items:center;justify-content:center;
+                    color:#fff;font-size:14px;font-weight:700;">${done ? '&#10003;' : ''}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:600;color:${done ? '#999' : '#222'};
+                      text-decoration:${done ? 'line-through' : 'none'};">${esc(ex.name)}</div>
+          <div style="font-size:12px;color:${done ? '#BBB' : '#666'};margin-top:2px;line-height:1.4;">${esc(ex.detail)}</div>
+        </div>
+        <div style="font-size:11px;font-weight:600;color:${cat.text};background:${cat.bg};
+                    border-radius:6px;padding:2px 6px;flex-shrink:0;font-family:'DM Mono',monospace;">${ex.mins}m</div>
+      </button>`;
+  });
+
+  const dayNav = week.days.map((_, i) => {
+    const dp = dayProg(wi, i);
+    const active = i === di;
+    return `<button onclick="goDay(${wi},${i})"
+      style="flex:1;padding:10px 4px;
+             border:${active ? `2px solid ${pc.accent}` : '2px solid #E0E0E0'};
+             border-radius:10px;background:${active ? pc.tag : '#fff'};text-align:center;">
+      <div style="font-size:11px;font-weight:700;color:${active ? pc.accent : '#666'};">D${i+1}</div>
+      <div style="font-size:10px;color:#999;margin-top:2px;">${dp.done}/${dp.total}</div>
+    </button>`;
+  }).join('');
+
+  return `
+    <div style="background:#FAFAFA;min-height:100vh;padding-bottom:max(40px,env(safe-area-inset-bottom,40px));">
+      <div style="background:${pc.accent};padding:calc(16px + env(safe-area-inset-top,0px)) 16px 20px;color:#fff;">
+        <button onclick="goWeek(${wi})"
+          style="background:rgba(255,255,255,.2);color:#fff;border-radius:8px;
+                 padding:6px 12px;font-size:13px;font-weight:600;margin-bottom:8px;">
+          &#8592; Week ${week.week}
+        </button>
+        <div style="font-size:22px;font-weight:700;">${esc(day.day)}: ${esc(day.label)}</div>
+        <div style="font-size:13px;opacity:.85;margin-top:4px;">Week ${week.week} &middot; ${esc(week.phase)} Phase &middot; ~60 min</div>
+        ${bar(prog.pct, pc.accent, 8, true)}
+        <div style="font-size:12px;margin-top:4px;opacity:.8;">${prog.done}/${prog.total} complete</div>
+      </div>
+      <div style="padding:12px;">${exHtml}</div>
+      <div style="display:flex;gap:8px;padding:8px 12px;justify-content:center;">${dayNav}</div>
+    </div>`;
+}
+
+// ============================================================
+// WEEK VIEW
+// ============================================================
+function renderWeek() {
+  const wi = S.activeWeek;
+  const week = PLAN[wi];
+  const wp = weekProg(wi);
+  const pc = PC[week.phaseNum];
+
+  const dayCards = week.days.map((day, di) => {
+    const dp = dayProg(wi, di);
+    const cats = {};
+    day.exercises.forEach(e => { cats[e.category] = (cats[e.category] || 0) + e.mins; });
+    const tags = Object.entries(cats).map(([c, m]) => {
+      const cc = CAT[c];
+      return `<span style="font-size:10px;font-weight:600;background:${cc.bg};color:${cc.text};border-radius:4px;padding:2px 6px;">${cc.icon} ${c} ${m}m</span>`;
+    }).join('');
+    const full = dp.pct === 100;
+    return `
+      <button onclick="goDay(${wi},${di})"
+        style="display:block;width:100%;text-align:left;
+               background:${full ? '#F8FFF8' : '#fff'};
+               border-left:4px solid ${full ? '#4CAF50' : pc.accent};
+               border-top:1.5px solid ${full ? '#4CAF50' : '#E0E0E0'};
+               border-right:1.5px solid ${full ? '#4CAF50' : '#E0E0E0'};
+               border-bottom:1.5px solid ${full ? '#4CAF50' : '#E0E0E0'};
+               border-radius:12px;padding:14px;margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:16px;font-weight:700;color:${full ? '#4CAF50' : '#222'};">
+              ${full ? '&#10003; ' : ''}${esc(day.day)}
+            </div>
+            <div style="font-size:13px;color:#666;margin-top:2px;">${esc(day.label)}</div>
+          </div>
+          <div style="font-size:20px;font-weight:700;color:${full ? '#4CAF50' : pc.accent};font-family:'DM Mono',monospace;">${dp.pct}%</div>
+        </div>
+        ${bar(dp.pct, full ? '#4CAF50' : pc.accent, 6, false)}
+        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">${tags}</div>
+      </button>`;
+  }).join('');
+
+  const weekNav = PLAN.map((w, i) => {
+    const wwp = weekProg(i);
+    const wpc = PC[w.phaseNum];
+    const active = i === wi;
+    return `<button onclick="goWeek(${i})"
+      style="width:32px;height:32px;border-radius:8px;
+             border:${active ? `2px solid ${wpc.accent}` : '1.5px solid #DDD'};
+             background:${wwp.pct === 100 ? '#4CAF50' : active ? wpc.tag : '#fff'};
+             color:${wwp.pct === 100 ? '#fff' : active ? wpc.accent : '#666'};
+             font-size:12px;font-weight:700;">${i+1}</button>`;
+  }).join('');
+
+  return `
+    <div style="background:#FAFAFA;min-height:100vh;padding-bottom:max(40px,env(safe-area-inset-bottom,40px));">
+      <div style="background:${pc.accent};padding:calc(16px + env(safe-area-inset-top,0px)) 16px 20px;color:#fff;">
+        <button onclick="goOverview()"
+          style="background:rgba(255,255,255,.2);color:#fff;border-radius:8px;
+                 padding:6px 12px;font-size:13px;font-weight:600;margin-bottom:8px;">
+          &#8592; All Weeks
+        </button>
+        <div style="font-size:22px;font-weight:700;">Week ${week.week}</div>
+        <div style="display:inline-block;background:rgba(255,255,255,.2);border-radius:6px;
+                    padding:2px 10px;font-size:12px;font-weight:600;margin-top:4px;">${esc(week.phase)} Phase</div>
+        ${bar(wp.pct, pc.accent, 8, true)}
+        <div style="font-size:12px;margin-top:4px;opacity:.8;">${wp.done}/${wp.total} exercises complete</div>
+      </div>
+      <div style="margin:12px;background:${pc.tag};border:1.5px solid ${pc.accent}30;border-radius:10px;padding:12px 14px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:${pc.accent};margin-bottom:4px;">Weekly Objective</div>
+        <div style="font-size:13px;color:#333;line-height:1.5;">${esc(week.objective)}</div>
+      </div>
+      <div style="padding:4px 12px;">${dayCards}</div>
+      <div style="display:flex;gap:4px;padding:8px 12px;flex-wrap:wrap;justify-content:center;">${weekNav}</div>
+    </div>`;
+}
+
+// ============================================================
+// OVERVIEW
+// ============================================================
+function renderOverview() {
+  const tp = totalProg();
+
+  const weekCards = PLAN.map((week, wi) => {
+    const wp = weekProg(wi);
+    const pc = PC[week.phaseNum];
+    const full = wp.pct === 100;
+    return `
+      <button onclick="goWeek(${wi})"
+        style="display:block;width:100%;text-align:left;
+               background:${full ? '#F8FFF8' : '#fff'};
+               border-left:4px solid ${full ? '#4CAF50' : pc.accent};
+               border-top:1.5px solid ${full ? '#4CAF50' : '#E0E0E0'};
+               border-right:1.5px solid ${full ? '#4CAF50' : '#E0E0E0'};
+               border-bottom:1.5px solid ${full ? '#4CAF50' : '#E0E0E0'};
+               border-radius:12px;padding:12px 14px;margin-bottom:6px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="flex:1;min-width:0;padding-right:12px;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span style="font-size:16px;font-weight:700;color:${full ? '#4CAF50' : '#222'};">
+                ${full ? '&#10003; ' : ''}Week ${week.week}
+              </span>
+              <span style="font-size:10px;font-weight:700;background:${pc.tag};color:${pc.tagText};
+                           border-radius:4px;padding:1px 6px;text-transform:uppercase;">${esc(week.phase)}</span>
+            </div>
+            <div style="font-size:12px;color:#888;margin-top:3px;line-height:1.3;">${esc(week.objective)}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div style="font-size:22px;font-weight:700;color:${full ? '#4CAF50' : pc.accent};font-family:'DM Mono',monospace;">${wp.pct}%</div>
+            <div style="font-size:10px;color:#999;">${wp.done}/${wp.total}</div>
+          </div>
+        </div>
+        ${bar(wp.pct, full ? '#4CAF50' : pc.accent, 5, false)}
+      </button>`;
+  }).join('');
+
+  const phases = [
+    { label: 'Foundation', p: 1, weeks: '1-3' },
+    { label: 'Build',      p: 2, weeks: '4-7' },
+    { label: 'Perform',    p: 3, weeks: '8-10' },
+  ];
+  const phaseLegend = phases.map(ph => `
+    <div style="background:${PC[ph.p].tag};border:1.5px solid ${PC[ph.p].accent}40;
+                border-radius:8px;padding:6px 10px;text-align:center;flex:1;">
+      <div style="font-size:12px;font-weight:700;color:${PC[ph.p].accent};">${ph.label}</div>
+      <div style="font-size:10px;color:#999;">Wk ${ph.weeks}</div>
+    </div>`).join('');
+
+  return `
+    <div style="background:#FAFAFA;min-height:100vh;padding-bottom:max(40px,env(safe-area-inset-bottom,40px));">
+      <div style="background:linear-gradient(135deg,#1A237E 0%,#283593 50%,#3949AB 100%);
+                  padding:calc(24px + env(safe-area-inset-top,0px)) 16px 28px;color:#fff;">
+        <div style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;opacity:.7;">Summer 2026</div>
+        <div style="font-size:26px;font-weight:700;margin-top:2px;">Vaughn's Training Plan</div>
+        <div style="font-size:13px;opacity:.7;margin-top:2px;">10 weeks &middot; 4 days/week &middot; 60 min sessions</div>
+        <div style="margin-top:16px;display:flex;align-items:center;gap:12px;">
+          <div style="flex:1;background:rgba(255,255,255,.15);border-radius:100px;height:10px;">
+            <div style="width:${tp.pct}%;background:#FFD54F;height:10px;border-radius:100px;transition:width .3s;"></div>
+          </div>
+          <div style="font-size:18px;font-weight:700;font-family:'DM Mono',monospace;">${tp.pct}%</div>
+        </div>
+        <div style="font-size:12px;opacity:.6;margin-top:4px;">${tp.done} of ${tp.total} exercises completed</div>
+      </div>
+      <div style="display:flex;gap:6px;padding:12px 12px 4px;">${phaseLegend}</div>
+      <div style="padding:8px 12px;">${weekCards}</div>
+      <div style="margin:8px 12px 0;background:#FFF3E0;border:1.5px solid #FFB74D;border-radius:10px;padding:10px 12px;">
+        <div style="font-size:12px;font-weight:700;color:#E65100;">&#9888;&#65039; Arm Safety Reminder</div>
+        <div style="font-size:11px;color:#BF360C;margin-top:4px;line-height:1.4;">
+          Pitching days are always Day 1 &amp; Day 3 with a rest day between. If his arm is sore, skip pitching and hit the cage instead. Never push through arm pain.
+        </div>
+      </div>
+    </div>`;
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function render() {
+  const app = document.getElementById('app');
+  if (S.view === 'day') app.innerHTML = renderDay();
+  else if (S.view === 'week') app.innerHTML = renderWeek();
+  else app.innerHTML = renderOverview();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+loadState();
+render();
+</script>
+</body>
+</html>
