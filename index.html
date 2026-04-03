@@ -8,7 +8,7 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'DM Sans', sans-serif; background: #FAFAFA; min-height: 100vh; }
-    button { font-family: 'DM Sans', sans-serif; }
+    button { font-family: 'DM Sans', sans-serif; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
     #app { max-width: 600px; margin: 0 auto; }
   </style>
 </head>
@@ -371,9 +371,9 @@ function renderDayView() {
           '</div>'
         : '';
       coachingHtml =
-        '<button data-action="toggleCoaching" data-key="' + key + '" style="display:flex;align-items:center;gap:4px;width:100%;text-align:left;background:' + (isExp ? '#FFF8E1' : '#FAFAFA') + ';border:none;border-top:1px solid ' + (done ? '#E8E8E8' : cat.border) + '40;padding:7px 12px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;color:' + (isExp ? '#F57F17' : '#888') + '">' +
-        '<span style="font-size:13px">\uD83E\uDDD1\u200D\uD83C\uDFEB</span><span>' + (isExp ? 'Hide coaching cues' : 'Show coaching cues') + '</span>' +
-        '<span style="margin-left:auto;font-size:10px">' + (isExp ? '&#9650;' : '&#9660;') + '</span></button>' +
+        '<button data-action="toggleCoaching" data-key="' + key + '" style="display:flex;align-items:center;gap:4px;width:100%;text-align:left;background:' + (isExp ? '#FFF8E1' : '#FAFAFA') + ';border:none;border-top:1px solid ' + (done ? '#E8E8E8' : cat.border) + '40;padding:12px 12px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;color:' + (isExp ? '#F57F17' : '#888') + '">' +
+        '<span style="font-size:13px;pointer-events:none">\uD83E\uDDD1\u200D\uD83C\uDFEB</span><span style="pointer-events:none">' + (isExp ? 'Hide coaching cues' : 'Show coaching cues') + '</span>' +
+        '<span style="margin-left:auto;font-size:10px;pointer-events:none">' + (isExp ? '&#9650;' : '&#9660;') + '</span></button>' +
         coachingContent;
     }
 
