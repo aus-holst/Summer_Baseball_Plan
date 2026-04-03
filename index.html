@@ -248,6 +248,7 @@ function storageSet(key, val) {
     const saved = storageGet(STORAGE_KEY);
     if (saved) completed = JSON.parse(saved);
   } catch(e) {}
+  attachEvents();
   render();
 })();
 
@@ -335,7 +336,6 @@ function render() {
   } else {
     app.innerHTML = renderOverviewView();
   }
-  attachEvents();
 }
 
 // ---- DAY VIEW ----
